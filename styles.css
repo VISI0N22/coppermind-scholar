@@ -9,6 +9,9 @@
     --text-muted: #a0a0a0;
     --border: #2a2a30;
     --accent: #c9a96e;
+    --ai-bg: #1a2a1a;
+    --ai-border: #2a4a2a;
+    --ai-text: #a8d5a8;
     --radius: 12px;
     --shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
@@ -136,6 +139,107 @@ header {
     color: var(--text-muted);
 }
 
+/* AI Answer Section */
+.ai-answer {
+    background: var(--ai-bg);
+    border: 1px solid var(--ai-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ai-border);
+    color: var(--ai-text);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ai-answer-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text);
+}
+
+.ai-answer-content .answer-highlight {
+    color: var(--ai-text);
+    font-weight: 600;
+}
+
+.ai-answer-content .answer-uncertain {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.ai-answer-sources {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--ai-border);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.ai-answer-sources a {
+    color: var(--copper-light);
+    text-decoration: none;
+}
+
+.ai-answer-sources a:hover {
+    text-decoration: underline;
+}
+
+/* Summary Section */
+.summary-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: fadeInUp 0.5s ease 0.1s both;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.summary-header h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--accent);
+    font-size: 1.1rem;
+}
+
+.summary-content {
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-size: 0.95rem;
+}
+
+.summary-content p {
+    margin-bottom: 12px;
+}
+
+.summary-content ul {
+    margin-left: 20px;
+    margin-bottom: 12px;
+}
+
+.summary-content li {
+    margin-bottom: 6px;
+}
+
+/* Results */
 .results {
     animation: fadeInUp 0.4s ease;
 }
@@ -378,5 +482,13 @@ footer a:hover {
     
     #searchBtn {
         justify-content: center;
+    }
+    
+    .ai-answer {
+        padding: 16px;
+    }
+    
+    .ai-answer-content {
+        font-size: 1rem;
     }
 }
