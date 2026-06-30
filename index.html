@@ -3,94 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coppermind Search</title>
+    <title>Coppermind Scholar</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="24" cy="24" r="22" stroke="#b87333" stroke-width="2"/>
-                    <path d="M24 8 L24 40 M8 24 L40 24" stroke="#b87333" stroke-width="1.5" opacity="0.3"/>
-                    <circle cx="24" cy="24" r="8" fill="#b87333" opacity="0.2"/>
-                    <circle cx="24" cy="24" r="4" fill="#b87333"/>
-                </svg>
-                <h1>Coppermind Search</h1>
-            </div>
-            <p class="subtitle">Ask questions about Brandon Sanderson's Cosmere</p>
-        </header>
-
-        <main>
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="e.g. 'When was Kaladin born?' or 'What is Allomancy?'" 
-                    autocomplete="off"
-                >
-                <button id="searchBtn" onclick="performSearch()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="M21 21l-4.35-4.35"/>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="22" stroke="#b87333" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="8" fill="#b87333" opacity="0.3"/>
+                        <circle cx="24" cy="24" r="4" fill="#b87333"/>
                     </svg>
-                    Search
-                </button>
+                    <h1>Coppermind<br><span>Scholar</span></h1>
+                </div>
+                <p class="tagline">Ask me anything about the Cosmere</p>
+            </div>
+            
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                New Conversation
+            </button>
+
+            <div class="suggestions">
+                <h3>Try asking:</h3>
+                <button onclick="askSuggestion('Who is Kaladin?')">Who is Kaladin?</button>
+                <button onclick="askSuggestion('When was Vin born?')">When was Vin born?</button>
+                <button onclick="askSuggestion('What is Allomancy?')">What is Allomancy?</button>
+                <button onclick="askSuggestion('What does Shallan look like?')">What does Shallan look like?</button>
+                <button onclick="askSuggestion('Tell me about Roshar')">Tell me about Roshar</button>
+                <button onclick="askSuggestion('What are the Knights Radiant?')">What are the Knights Radiant?</button>
             </div>
 
-            <div id="loading" class="loading hidden">
-                <div class="spinner"></div>
-                <p>Searching the Coppermind...</p>
+            <div class="sidebar-footer">
+                <p>Powered by <a href="https://coppermind.net" target="_blank" rel="noopener">The Coppermind</a></p>
+            </div>
+        </aside>
+
+        <main class="chat-container">
+            <div class="chat-header">
+                <h2>Coppermind Scholar</h2>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Connected to Coppermind
+                </div>
             </div>
 
-            <!-- AI Answer Section -->
-            <div id="aiAnswer" class="ai-answer hidden">
-                <div class="ai-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div id="chatMessages" class="chat-messages">
+                <div class="message bot-message">
+                    <div class="avatar">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="message-content">
+                        <p>Greetings, traveler. I am the Coppermind Scholar, a keeper of knowledge from Brandon Sanderson's Cosmere. Ask me about characters, magic systems, worlds, or events — I shall search the archives and reveal what I find.</p>
+                        <span class="timestamp">Now</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="typingIndicator" class="typing-indicator hidden">
+                <div class="avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                         <path d="M2 17l10 5 10-5"/>
                         <path d="M2 12l10 5 10-5"/>
                     </svg>
-                    AI Answer
                 </div>
-                <div id="aiAnswerContent" class="ai-answer-content"></div>
-                <div id="aiAnswerSources" class="ai-answer-sources"></div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
             </div>
 
-            <!-- Summary Section -->
-            <div id="summarySection" class="summary-section hidden">
-                <div class="summary-header">
-                    <h3>📋 Summary of All Results</h3>
+            <div class="input-area">
+                <div class="input-box">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        placeholder="Ask me anything about the Cosmere..." 
+                        autocomplete="off"
+                    >
+                    <button id="sendBtn" onclick="sendMessage()" aria-label="Send">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
                 </div>
-                <div id="summaryContent" class="summary-content"></div>
-            </div>
-
-            <div id="results" class="results hidden">
-                <div class="results-header">
-                    <h2 id="resultsTitle">Results</h2>
-                    <span id="resultsCount"></span>
-                </div>
-                <div id="resultsContent"></div>
-            </div>
-
-            <div id="articleModal" class="modal hidden">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 id="modalTitle"></h2>
-                        <button class="close-btn" onclick="closeModal()">&times;</button>
-                    </div>
-                    <div class="modal-body" id="modalBody"></div>
-                    <div class="modal-footer">
-                        <a id="wikiLink" href="#" target="_blank" rel="noopener">View on Coppermind →</a>
-                    </div>
-                </div>
+                <p class="disclaimer">Knowledge is drawn from the Coppermind wiki. I may make mistakes — always verify important details.</p>
             </div>
         </main>
-
-        <footer>
-            <p>Data from <a href="https://coppermind.net" target="_blank" rel="noopener">The Coppermind</a> • Not affiliated with Brandon Sanderson</p>
-        </footer>
     </div>
 
     <script src="app.js"></script>
