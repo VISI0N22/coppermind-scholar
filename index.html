@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coppermind Search</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="24" cy="24" r="22" stroke="#b87333" stroke-width="2"/>
+                    <path d="M24 8 L24 40 M8 24 L40 24" stroke="#b87333" stroke-width="1.5" opacity="0.3"/>
+                    <circle cx="24" cy="24" r="8" fill="#b87333" opacity="0.2"/>
+                    <circle cx="24" cy="24" r="4" fill="#b87333"/>
+                </svg>
+                <h1>Coppermind Search</h1>
+            </div>
+            <p class="subtitle">Search the Brandon Sanderson wiki</p>
+        </header>
+
+        <main>
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Ask about characters, magic systems, locations..." 
+                    autocomplete="off"
+                >
+                <button id="searchBtn" onclick="performSearch()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    Search
+                </button>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Searching the Coppermind...</p>
+            </div>
+
+            <div id="results" class="results hidden">
+                <div class="results-header">
+                    <h2 id="resultsTitle">Results</h2>
+                    <span id="resultsCount"></span>
+                </div>
+                <div id="resultsContent"></div>
+            </div>
+
+            <div id="articleModal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modalTitle"></h2>
+                        <button class="close-btn" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="modalBody"></div>
+                    <div class="modal-footer">
+                        <a id="wikiLink" href="#" target="_blank" rel="noopener">View on Coppermind →</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Data from <a href="https://coppermind.net" target="_blank" rel="noopener">The Coppermind</a> • Not affiliated with Brandon Sanderson</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
