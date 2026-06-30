@@ -19,7 +19,7 @@
                 </svg>
                 <h1>Coppermind Search</h1>
             </div>
-            <p class="subtitle">Search the Brandon Sanderson wiki</p>
+            <p class="subtitle">Ask questions about Brandon Sanderson's Cosmere</p>
         </header>
 
         <main>
@@ -27,7 +27,7 @@
                 <input 
                     type="text" 
                     id="searchInput" 
-                    placeholder="Ask about characters, magic systems, locations..." 
+                    placeholder="e.g. 'When was Kaladin born?' or 'What is Allomancy?'" 
                     autocomplete="off"
                 >
                 <button id="searchBtn" onclick="performSearch()">
@@ -42,6 +42,28 @@
             <div id="loading" class="loading hidden">
                 <div class="spinner"></div>
                 <p>Searching the Coppermind...</p>
+            </div>
+
+            <!-- AI Answer Section -->
+            <div id="aiAnswer" class="ai-answer hidden">
+                <div class="ai-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    AI Answer
+                </div>
+                <div id="aiAnswerContent" class="ai-answer-content"></div>
+                <div id="aiAnswerSources" class="ai-answer-sources"></div>
+            </div>
+
+            <!-- Summary Section -->
+            <div id="summarySection" class="summary-section hidden">
+                <div class="summary-header">
+                    <h3>📋 Summary of All Results</h3>
+                </div>
+                <div id="summaryContent" class="summary-content"></div>
             </div>
 
             <div id="results" class="results hidden">
