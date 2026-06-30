@@ -1,2 +1,2 @@
 # Cosmere-scrapper
-an ai search engine for the copper mind
+https://visi0n22.github.io/Cosmere-scrapper/
