@@ -14,7 +14,7 @@ const KB = {
     
     set(key, data) {
         this.cache.set(key, { data, time: Date.now() });
-        if (this.cache.size > 200) {
+        if (this.cache.size > 300) {
             const first = this.cache.keys().next().value;
             this.cache.delete(first);
         }
@@ -43,7 +43,7 @@ function startNewChat() {
                 </svg>
             </div>
             <div class="message-content">
-                <p>Greetings, traveler. I am the Coppermind Scholar, attuned to the Spiritual Realm of Brandon Sanderson's Cosmere. My archives span characters, shards, magic systems, and worlds. Ask, and I shall search the Cognitive Realm for answers.</p>
+                <p>Greetings, traveler. I am the Coppermind Scholar, attuned to the Spiritual Realm of Brandon Sanderson's Cosmere. My archives span characters, shards, magic systems, and worlds across the cosmere. Ask, and I shall search the Cognitive Realm for answers.</p>
                 <span class="timestamp">Now</span>
             </div>
         </div>
@@ -109,23 +109,19 @@ function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; 
 // ==================== SCHOLAR CORE ====================
 const Scholar = {
     async process(query) {
-        // Handle follow-ups
         let q = query;
         if (this.isFollowUp(query) && KB.context.lastEntity) {
             q = this.injectContext(query, KB.context.lastEntity);
         }
         
-        // Phase 1: Deep Entity & Intent Analysis
         const analysis = this.analyzeQuery(q);
         console.log('Analysis:', analysis);
         
-        // Phase 2: Multi-Strategy Search
         const searchResults = await this.multiSearch(analysis);
         if (!searchResults.length) {
             return this.noResults(query);
         }
         
-        // Phase 3: Deep Article Ingestion (raw wikitext + categories + extracts)
         const articles = await this.ingestArticles(searchResults.slice(0, 6));
         if (!articles.length) {
             return this.noResults(query);
@@ -134,10 +130,7 @@ const Scholar = {
         KB.context.lastEntity = articles[0].title;
         KB.context.lastTopic = analysis.intent;
         
-        // Phase 4: Structured Knowledge Extraction
         const knowledge = this.extractKnowledge(articles);
-        
-        // Phase 5: Answer Synthesis
         return this.synthesize(analysis, articles, knowledge);
     },
     
@@ -154,13 +147,9 @@ const Scholar = {
         const lower = query.toLowerCase().replace(/[?.,!]/g, '');
         const words = lower.split(/\s+/);
         
-        // Extract entity using multiple strategies
         const entity = this.extractEntity(query);
-        
-        // Determine intent
         const intent = this.classifyIntent(lower, query);
         
-        // Extract question focus words (content words)
         const stopWords = new Set(['the','a','an','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','shall','should','can','could','may','might','must','to','of','in','for','on','with','at','by','from','as','into','through','during','before','after','above','below','between','under','and','but','or','yet','so','if','because','since','although','though','while','where','when','who','what','which','whom','whose','how','why','this','that','these','those','i','me','my','we','our','you','your','he','him','his','she','her','it','its','they','them','their','am','all','any','both','each','few','more','most','other','some','such','no','nor','not','only','own','same','so','than','too','very','just','now','then','here','there','once','again','further','also','too','very','really','actually','probably','maybe','perhaps','still','yet','already','almost','quite','rather','pretty','fairly','somewhat','about','after','again','against','almost','already','although','always','among','amount','an','and','another','any','anyone','anything','around','as','at','away','back','be','became','because','become','been','before','behind','being','below','between','both','but','by','came','can','cannot','could','did','do','does','doing','done','down','during','each','either','else','enough','even','ever','every','everyone','everything','far','few','for','from','further','get','gets','getting','given','gives','go','goes','going','gone','got','gotten','had','has','have','having','he','her','here','hers','herself','him','himself','his','how','however','i','if','in','into','is','it','its','itself','just','keep','keeps','kept','last','least','less','let','lets','like','likely','made','make','makes','making','many','may','maybe','me','might','mine','more','most','mostly','much','must','my','myself','near','nearly','need','needs','neither','never','new','next','no','nobody','non','none','noone','nor','not','nothing','now','nowhere','of','off','often','oh','ok','okay','old','on','once','one','only','onto','or','other','others','our','ours','ourselves','out','outside','over','overall','own','part','parts','per','perhaps','please','put','puts','quite','rather','re','really','right','said','same','saw','say','says','second','seconds','see','seem','seemed','seeming','seems','sees','several','shall','she','should','show','showed','showing','shows','side','sides','since','small','smaller','smallest','so','some','somebody','someone','something','somewhere','state','states','still','such','sure','t','take','taken','takes','taking','than','that','the','their','them','themselves','then','there','therefore','these','they','thing','things','think','thinks','this','those','though','thought','thoughts','thousand','three','through','throughout','thus','to','today','together','too','took','toward','towards','trillion','try','trying','turn','turned','turning','turns','two','u','under','unless','until','up','upon','us','use','used','uses','using','very','via','want','wanted','wanting','wants','was','way','ways','we','well','wells','went','were','what','whatever','when','whenever','where','whereas','wherever','whether','which','while','who','whoever','whole','whom','whose','why','will','with','within','without','work','worked','working','works','would','x','y','year','years','yes','yet','you','young','younger','youngest','your','yours','yourself','yourselves','z']);
         
         const focusWords = words.filter(w => w.length > 2 && !stopWords.has(w));
@@ -169,7 +158,6 @@ const Scholar = {
     },
     
     extractEntity(query) {
-        // Strategy 1: Remove question prefixes
         let cleaned = query;
         const prefixes = [
             'who is','who was','what is','what are','what was','what were',
@@ -192,7 +180,7 @@ const Scholar = {
         
         cleaned = cleaned.replace(/[?.,!]$/, '').trim();
         
-        // Strategy 2: Find capitalized proper nouns (Cosmere names)
+        // Find capitalized proper nouns
         const words = cleaned.split(/\s+/);
         let best = '';
         let current = [];
@@ -209,7 +197,6 @@ const Scholar = {
         const lastPhrase = current.join(' ');
         if (lastPhrase.length > best.length) best = lastPhrase;
         
-        // Strategy 3: If no proper nouns, take longest meaningful phrase
         if (!best) {
             const phrases = cleaned.split(/\s+(?:and|or|but|who|which|that|with|from)\s+/i);
             best = phrases.sort((a, b) => b.length - a.length)[0] || cleaned;
@@ -219,73 +206,23 @@ const Scholar = {
     },
     
     classifyIntent(lower, original) {
-        // Birth/Death/Age
         if (/\b(born|birth|birthday|date of birth|when .* born|when .* die|died|death|dead|killed|slain|murdered|assassinated|executed|how old|age|years old)\b/.test(lower)) {
             if (/\b(die|died|death|dead|killed|slain|murdered|assassinated|executed)\b/.test(lower)) return 'death';
             if (/\b(how old|age|years old)\b/.test(lower)) return 'age';
             return 'birth';
         }
-        
-        // Appearance
-        if (/\b(look like|appearance|describe .* look|looks like|hair|eyes|skin|face|tall|short|build|figure|handsome|beautiful|ugly|attractive|dress|clothing|wear)\b/.test(lower)) {
-            return 'appearance';
-        }
-        
-        // Family
-        if (/\b(family|parents|father|mother|dad|mom|siblings|brother|sister|related|married|wife|husband|spouse|son|daughter|child|children|cousin|uncle|aunt|nephew|niece|ancestor|descendant|lineage)\b/.test(lower)) {
-            return 'family';
-        }
-        
-        // Abilities
-        if (/\b(powers|abilities|skills|magic|allomancy|surgebinding|feruchemy|hemalurgy|awakening|aondor|forgery|sand mastery|investiture|shardblade|shardplate|spren|nahel|bond|radiant|mistborn|twinborn|compound|atium|lerasium|honorblade|surge|voidbinding|regal|stormform|kandra|koloss|elantrian|returned|awakener|dakhor|chayshan)\b/.test(lower)) {
-            return 'abilities';
-        }
-        
-        // Role
-        if (/\b(job|work|occupation|profession|role|position|soldier|knight|captain|general|lord|lady|king|queen|emperor|merchant|scholar|thief|spy|assassin|surgeon|writer|singer|artifabrian|highprince|herald|champion|vessel|warden|guard|servant|slave|master|apprentice)\b/.test(lower)) {
-            return 'role';
-        }
-        
-        // Origin
-        if (/\b(from|planet|world|where .* from|homeworld|realm|location|place|city|nation|country|empire|kingdom|region|territory|valley|mountain|sea|ocean|shardworld)\b/.test(lower)) {
-            return 'origin';
-        }
-        
-        // Books
-        if (/\b(book|novel|appear|featured|first seen|introduced|debut|in which|which book|series|stormlight|mistborn|elantris|warbreaker|arcanum|tress|yumi|sunlit|emperor|soul|defending|firstborn|eleventh|secret|dawnshard)\b/.test(lower)) {
-            return 'appearances';
-        }
-        
-        // Personality
-        if (/\b(personality|character|like|nature|temperament|brave|coward|honest|kind|cruel|smart|clever|wise|foolish|depressed|happy|sad|angry|honorable|dishonorable|loyal|faithless|stubborn|determined|broken|idealistic|cynical|optimistic|pessimistic|arrogant|humble|proud)\b/.test(lower)) {
-            return 'personality';
-        }
-        
-        // Events/Actions
-        if (/\b(what did|what happened|what .* do|accomplish|achieve|defeat|kill|save|fight|battle|war|duel|journey|quest|mission|betray|help|rescue|destroy|create|found|lead|command|rule|escape|survive|win|lose)\b/.test(lower)) {
-            return 'events';
-        }
-        
-        // Concept
-        if (/^(what is|what are|explain|define|describe|how does|how do|what does|tell me about)/i.test(original)) {
-            return 'concept';
-        }
-        
-        // Comparison
-        if (/\b(vs|versus|compare|difference|similar|alike|unlike|better|worse|stronger|weaker|faster|slower)\b/.test(lower)) {
-            return 'comparison';
-        }
-        
-        // List
-        if (/\b(list|all|every|each|names|types|kinds|orders|shards|radiants|heralds|books|characters|magic|spren|metals|surges|voidbringers|unmade)\b/.test(lower)) {
-            return 'list';
-        }
-        
-        // Yes/No
-        if (/^(is|are|was|were|did|does|do|can|could|would|should|will|has|have|had)\b/i.test(original)) {
-            return 'yesno';
-        }
-        
+        if (/\b(look like|appearance|describe .* look|looks like|hair|eyes|skin|face|tall|short|build|figure|handsome|beautiful|ugly|attractive|dress|clothing|wear)\b/.test(lower)) return 'appearance';
+        if (/\b(family|parents|father|mother|dad|mom|siblings|brother|sister|related|married|wife|husband|spouse|son|daughter|child|children|cousin|uncle|aunt|nephew|niece|ancestor|descendant|lineage)\b/.test(lower)) return 'family';
+        if (/\b(powers|abilities|skills|magic|allomancy|surgebinding|feruchemy|hemalurgy|awakening|aondor|forgery|sand mastery|investiture|shardblade|shardplate|spren|nahel|bond|radiant|mistborn|twinborn|compound|atium|lerasium|honorblade|surge|voidbinding|regal|stormform|kandra|koloss|elantrian|returned|awakener|dakhor|chayshan)\b/.test(lower)) return 'abilities';
+        if (/\b(job|work|occupation|profession|role|position|soldier|knight|captain|general|lord|lady|king|queen|emperor|merchant|scholar|thief|spy|assassin|surgeon|writer|singer|artifabrian|highprince|herald|champion|vessel|warden|guard|servant|slave|master|apprentice)\b/.test(lower)) return 'role';
+        if (/\b(from|planet|world|where .* from|homeworld|realm|location|place|city|nation|country|empire|kingdom|region|territory|valley|mountain|sea|ocean|shardworld)\b/.test(lower)) return 'origin';
+        if (/\b(book|novel|appear|featured|first seen|introduced|debut|in which|which book|series|stormlight|mistborn|elantris|warbreaker|arcanum|tress|yumi|sunlit|emperor|soul|defending|firstborn|eleventh|secret|dawnshard)\b/.test(lower)) return 'appearances';
+        if (/\b(personality|character|like|nature|temperament|brave|coward|honest|kind|cruel|smart|clever|wise|foolish|depressed|happy|sad|angry|honorable|dishonorable|loyal|faithless|stubborn|determined|broken|idealistic|cynical|optimistic|pessimistic|arrogant|humble|proud)\b/.test(lower)) return 'personality';
+        if (/\b(what did|what happened|what .* do|accomplish|achieve|defeat|kill|save|fight|battle|war|duel|journey|quest|mission|betray|help|rescue|destroy|create|found|lead|command|rule|escape|survive|win|lose)\b/.test(lower)) return 'events';
+        if (/^(what is|what are|explain|define|describe|how does|how do|what does|tell me about)/i.test(original)) return 'concept';
+        if (/\b(vs|versus|compare|difference|similar|alike|unlike|better|worse|stronger|weaker|faster|slower)\b/.test(lower)) return 'comparison';
+        if (/\b(list|all|every|each|names|types|kinds|orders|shards|radiants|heralds|books|characters|magic|spren|metals|surges|voidbringers|unmade)\b/.test(lower)) return 'list';
+        if (/^(is|are|was|were|did|does|do|can|could|would|should|will|has|have|had)\b/i.test(original)) return 'yesno';
         return 'overview';
     },
     
@@ -294,25 +231,17 @@ const Scholar = {
         const { entity, query } = analysis;
         const strategies = [];
         
-        // Strategy 1: Direct search
         strategies.push(this.search(query));
-        
-        // Strategy 2: Entity-only search (if different from query)
         if (entity && entity !== query && entity.length > 2) {
             strategies.push(this.search(entity));
         }
-        
-        // Strategy 3: OpenSearch for suggestions
         strategies.push(this.openSearch(entity || query));
-        
-        // Strategy 4: Exact title match attempt
         if (entity) {
             strategies.push(this.checkExactTitle(entity));
         }
         
         const results = await Promise.all(strategies);
         
-        // Merge and deduplicate by title, keeping highest score
         const merged = new Map();
         for (const arr of results) {
             for (const r of arr) {
@@ -322,9 +251,7 @@ const Scholar = {
             }
         }
         
-        return Array.from(merged.values())
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 8);
+        return Array.from(merged.values()).sort((a, b) => b.score - a.score).slice(0, 8);
     },
     
     async search(q) {
@@ -339,10 +266,10 @@ const Scholar = {
             });
             const res = await fetch(`${API_BASE}?${params}`);
             const data = await res.json();
-            const results = (data.query?.search || []).map(r => ({
+            const results = (data.query?.search || []).map((r, i) => ({
                 title: r.title,
                 snippet: r.snippet,
-                score: r.score || 100 - (r.index || 0) * 10
+                score: 100 - i * 8
             }));
             KB.set(cacheKey, results);
             return results;
@@ -356,9 +283,8 @@ const Scholar = {
             });
             const res = await fetch(`${API_BASE}?${params}`);
             const data = await res.json();
-            // opensearch returns [query, titles, descriptions, urls]
             const titles = data[1] || [];
-            return titles.map((t, i) => ({ title: t, score: 100 - i * 10 }));
+            return titles.map((t, i) => ({ title: t, score: 90 - i * 8 }));
         } catch (e) { return []; }
     },
     
@@ -371,7 +297,7 @@ const Scholar = {
             const data = await res.json();
             const pages = data.query?.pages || {};
             const page = Object.values(pages)[0];
-            if (page && page.pageid) {
+            if (page && page.pageid && !page.missing) {
                 return [{ title: page.title, score: 200 }];
             }
         } catch (e) {}
@@ -383,7 +309,6 @@ const Scholar = {
         const titles = searchResults.map(r => r.title);
         if (!titles.length) return [];
         
-        // Fetch raw wikitext, categories, and extracts in parallel batches
         const [wikitextData, categoriesData, extractsData] = await Promise.all([
             this.fetchWikitext(titles),
             this.fetchCategories(titles),
@@ -401,7 +326,8 @@ const Scholar = {
                 categories: cats,
                 extract: ext,
                 infobox: this.parseInfobox(wt),
-                parsed: this.parseWikitext(wt)
+                parsed: this.parseWikitext(wt),
+                cleanExtract: this.sanitizeExtract(ext)
             };
         }).filter(a => a.wikitext.length > 20 || a.extract.length > 20);
     },
@@ -470,22 +396,23 @@ const Scholar = {
         const infobox = {};
         if (!wikitext) return infobox;
         
-        // Match any template that looks like an infobox (starts with capital letter)
-        const templateMatch = wikitext.match(/\{\{([A-Z][a-zA-Z0-9\s]+)([^{}]*)\}\}/s);
-        if (!templateMatch) return infobox;
-        
-        const content = templateMatch[2];
-        // Parse key=value pairs
-        const pairs = content.split('|');
-        for (const pair of pairs) {
-            const eq = pair.indexOf('=');
-            if (eq > 0) {
-                const key = pair.substring(0, eq).trim().toLowerCase();
-                let value = pair.substring(eq + 1).trim();
-                // Clean wiki markup from value
-                value = value.replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, '$2$1').replace(/\{\{.*?\}\}/g, '').trim();
-                if (key && value && value.length < 300) {
-                    infobox[key] = value;
+        // Find infobox template - handle nested braces
+        let depth = 0;
+        let start = -1;
+        for (let i = 0; i < wikitext.length - 1; i++) {
+            if (wikitext[i] === '{' && wikitext[i+1] === '{') {
+                if (depth === 0) start = i;
+                depth++;
+                i++;
+            } else if (wikitext[i] === '}' && wikitext[i+1] === '}') {
+                depth--;
+                i++;
+                if (depth === 0 && start !== -1) {
+                    const template = wikitext.substring(start + 2, i);
+                    if (/^(?:Character|Location|Magic|Book|Event|Group|Creature|Shard)/i.test(template)) {
+                        this.parseTemplateFields(template, infobox);
+                    }
+                    start = -1;
                 }
             }
         }
@@ -493,11 +420,92 @@ const Scholar = {
         return infobox;
     },
     
+    parseTemplateFields(templateContent, infobox) {
+        // Remove template name
+        const firstPipe = templateContent.indexOf('|');
+        const content = firstPipe > 0 ? templateContent.substring(firstPipe + 1) : templateContent;
+        
+        // Split by pipes, respecting nested structures
+        const fields = this.splitTemplateFields(content);
+        
+        for (const field of fields) {
+            const eq = field.indexOf('=');
+            if (eq > 0) {
+                let key = field.substring(0, eq).trim().toLowerCase();
+                let value = field.substring(eq + 1).trim();
+                
+                // Clean the value thoroughly
+                value = this.cleanTemplateValue(value);
+                
+                if (key && value && value.length > 0 && value.length < 500) {
+                    // Handle multiple values separated by commas or <br>
+                    const values = value.split(/,|<br\s*\/?>/).map(v => v.trim()).filter(v => v.length > 0);
+                    infobox[key] = values.length === 1 ? values[0] : values;
+                }
+            }
+        }
+    },
+    
+    splitTemplateFields(content) {
+        const fields = [];
+        let current = '';
+        let depth = 0;
+        
+        for (let i = 0; i < content.length; i++) {
+            const char = content[i];
+            if (char === '{' || char === '[') {
+                depth++;
+                current += char;
+            } else if (char === '}' || char === ']') {
+                depth--;
+                current += char;
+            } else if (char === '|' && depth === 0) {
+                if (current.trim()) fields.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        if (current.trim()) fields.push(current.trim());
+        
+        return fields;
+    },
+    
+    cleanTemplateValue(value) {
+        if (!value) return '';
+        
+        // Remove wiki links [[Target|Display]] -> Display
+        value = value.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2');
+        value = value.replace(/\[\[([^\]]+)\]\]/g, '$1');
+        
+        // Remove templates
+        value = value.replace(/\{\{.*?\}\}/gs, '');
+        
+        // Remove HTML tags
+        value = value.replace(/<[^>]+>/g, ' ');
+        
+        // Remove formatting
+        value = value.replace(/'''?(.*?)'''?/g, '$1');
+        value = value.replace(/''(.*?)''/g, '$1');
+        
+        // Remove refs
+        value = value.replace(/<ref[^>]*>.*?<\/ref>/gi, '');
+        value = value.replace(/<ref[^>]*\/>/gi, '');
+        
+        // Clean up
+        value = value.replace(/\s+/g, ' ').trim();
+        value = value.replace(/^[,;\s]+|[,;\s]+$/g, '');
+        
+        // Remove empty parentheses
+        value = value.replace(/\(\s*\)/g, '');
+        
+        return value;
+    },
+    
     parseWikitext(wikitext) {
         const sections = [];
         if (!wikitext) return sections;
         
-        // Split by headers
         const parts = wikitext.split(/(?=={2,4}[^=]+={2,4})/);
         for (const part of parts) {
             const headerMatch = part.match(/^(={2,4})\s*([^=]+?)\s*\1/);
@@ -505,13 +513,23 @@ const Scholar = {
                 const level = headerMatch[1].length;
                 const title = headerMatch[2].trim();
                 const content = part.substring(headerMatch[0].length).trim();
-                sections.push({ level, title, content });
+                sections.push({ level, title, content: this.cleanTemplateValue(content) });
             } else if (part.trim()) {
-                sections.push({ level: 1, title: 'Introduction', content: part.trim() });
+                sections.push({ level: 1, title: 'Introduction', content: this.cleanTemplateValue(part.trim()) });
             }
         }
         
         return sections;
+    },
+    
+    sanitizeExtract(extract) {
+        if (!extract) return '';
+        // Remove any remaining template residue
+        let text = extract;
+        text = text.replace(/\{\{.*?\}\}/gs, '');
+        text = text.replace(/==+.*?==+/g, '');
+        text = text.replace(/\s+/g, ' ').trim();
+        return text;
     },
     
     // ==================== KNOWLEDGE EXTRACTION ====================
@@ -519,6 +537,7 @@ const Scholar = {
         const main = articles[0];
         const k = {
             entityType: this.detectEntityType(main),
+            infobox: main.infobox || {},
             dates: {},
             people: [],
             places: [],
@@ -531,26 +550,15 @@ const Scholar = {
             affiliations: [],
             books: [],
             numbers: [],
-            rawSentences: []
+            rawSentences: [],
+            sections: main.parsed || []
         };
         
-        // Priority 1: Infobox data (structured)
-        if (main.infobox) {
-            for (const [key, value] of Object.entries(main.infobox)) {
-                if (key.includes('born') || key.includes('birth') || key.includes('date')) k.dates.birth = value;
-                if (key.includes('die') || key.includes('death')) k.dates.death = value;
-                if (key.includes('age')) k.dates.age = value;
-                if (key.includes('abilities') || key.includes('powers') || key.includes('skills')) k.abilities.push(value);
-                if (key.includes('world') || key.includes('planet') || key.includes('universe')) k.places.push(value);
-                if (key.includes('family') || key.includes('parents') || key.includes('spouse')) k.relationships.push(value);
-                if (key.includes('titles') || key.includes('occupation') || key.includes('profession')) k.titles.push(value);
-                if (key.includes('hair') || key.includes('eyes') || key.includes('height') || key.includes('appearance')) k.physical.push(value);
-                if (key.includes('book') || key.includes('appearance') || key.includes('series')) k.books.push(value);
-            }
-        }
+        // Extract from infobox first (structured, reliable)
+        this.extractFromInfobox(k, main.infobox);
         
-        // Priority 2: Text analysis
-        const text = cleanText(main.extract || main.wikitext || '');
+        // Extract from clean text
+        const text = main.cleanExtract || cleanText(main.extract || main.wikitext || '');
         const sentences = splitSentences(text);
         k.rawSentences = sentences;
         
@@ -558,51 +566,119 @@ const Scholar = {
             const lower = sent.toLowerCase();
             
             // Dates
-            const dateMatches = sent.match(/\b(\d{1,2}\s+[A-Za-z]+\s+\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{4}(?:\s*AD|CE|BE)?)\b/g);
-            if (dateMatches && (lower.includes('born') || lower.includes('die') || lower.includes('age'))) {
-                dateMatches.forEach(d => { if (!k.dates.found) k.dates.found = d; });
+            if (/\b(born|died|death|age|date|year)\b/i.test(sent)) {
+                const dateMatches = sent.match(/\b(\d{1,2}\s+[A-Za-z]+\s+\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{4}(?:\s*AD|CE|BE)?)\b/g);
+                if (dateMatches) {
+                    if (/\b(born|birth)\b/i.test(sent) && !k.dates.birth) k.dates.birth = dateMatches[0];
+                    if (/\b(died|death|killed|slain)\b/i.test(sent) && !k.dates.death) k.dates.death = dateMatches[0];
+                }
             }
             
             // Physical
-            if (/\b(tall|short|muscular|slender|thin|heavy|broad|lean|athletic|wiry|lanky|stocky|plump|handsome|beautiful)\b/i.test(sent) ||
-                /\b(hair|eyes|skin|face|beard|complexion|build|figure|features|dressed|wearing|garb)\b/i.test(sent)) {
-                if (!k.physical.includes(sent)) k.physical.push(sent);
+            if (/\b(tall|short|muscular|slender|thin|heavy|broad|lean|athletic|wiry|lanky|stocky|plump|handsome|beautiful|dressed|wearing)\b/i.test(sent) ||
+                /\b(hair|eyes|skin|face|beard|complexion|build|figure|features|garb|clothing)\b/i.test(sent)) {
+                if (!k.physical.includes(sent) && sent.length < 300) k.physical.push(sent);
             }
             
             // Abilities
             if (/\b(power|ability|magic|skill|talent|gift|blessing|curse|wields|commands|controls|uses|burns|draws|channels|surgebind|allomanc|feruchem|awaken|hemalurg)\b/i.test(sent)) {
-                if (!k.abilities.includes(sent)) k.abilities.push(sent);
+                if (!k.abilities.includes(sent) && sent.length < 300) k.abilities.push(sent);
             }
             
             // Relationships
             if (/\b(father|mother|parent|brother|sister|sibling|son|daughter|child|wife|husband|spouse|family|cousin|uncle|aunt|married|betrothed|lover|friend|enemy|ally|mentor|student)\b/i.test(sent)) {
-                if (!k.relationships.includes(sent)) k.relationships.push(sent);
+                if (!k.relationships.includes(sent) && sent.length < 300) k.relationships.push(sent);
             }
             
             // Places
-            if (/\b(from|in|on|at|near|between|across|throughout|within)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})\b/.test(sent)) {
-                const match = sent.match(/\b(from|in|on|at|near)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})\b/);
-                if (match && !k.places.includes(match[2])) k.places.push(match[2]);
+            const placeMatch = sent.match(/\b(from|in|on|at|near)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})\b/);
+            if (placeMatch && !k.places.includes(placeMatch[2])) {
+                k.places.push(placeMatch[2]);
             }
             
             // Titles/Roles
-            if (/\b(king|queen|emperor|lord|lady|prince|princess|highprince|knight|soldier|captain|general|commander|merchant|scholar|thief|spy|assassin|surgeon|writer|singer|artifabrian|herald|champion|vessel|warden|slave|master)\b/i.test(sent)) {
-                if (!k.titles.includes(sent)) k.titles.push(sent);
+            if (/\b(king|queen|emperor|lord|lady|prince|princess|highprince|knight|soldier|captain|general|commander|merchant|scholar|thief|spy|assassin|surgeon|writer|singer|artifabrian|herald|champion|vessel|warden|slave|master|empress|warrior|hero|survivor)\b/i.test(sent)) {
+                if (!k.titles.includes(sent) && sent.length < 300) k.titles.push(sent);
             }
             
             // Events
-            if (/\b(fought|battled|led|commanded|discovered|created|founded|destroyed|saved|killed|defeated|betrayed|allied|joined|left|arrived|departed|returned|escaped|rescued|protected|trained|survived|won|lost)\b/i.test(sent)) {
-                if (!k.events.includes(sent)) k.events.push(sent);
+            if (/\b(fought|battled|led|commanded|discovered|created|founded|destroyed|saved|killed|defeated|betrayed|allied|joined|left|arrived|departed|returned|escaped|rescued|protected|trained|survived|won|lost|overthrew|united)\b/i.test(sent)) {
+                if (!k.events.includes(sent) && sent.length < 300) k.events.push(sent);
             }
             
             // Books
-            const bookMatches = sent.match(/\b(The Way of Kings|Words of Radiance|Oathbringer|Rhythm of War|Wind and Truth|Mistborn|The Final Empire|The Well of Ascension|The Hero of Ages|The Alloy of Law|Shadows of Self|The Bands of Mourning|The Lost Metal|Elantris|Warbreaker|Arcanum Unbounded|White Sand|Tress of the Emerald Sea|Yumi and the Nightmare Painter|The Sunlit Man|Dawnshard|Edgedancer)\b/g);
-            if (bookMatches) {
-                bookMatches.forEach(b => { if (!k.books.includes(b)) k.books.push(b); });
+            const bookNames = ['The Way of Kings','Words of Radiance','Oathbringer','Rhythm of War','Wind and Truth','Mistborn','The Final Empire','The Well of Ascension','The Hero of Ages','The Alloy of Law','Shadows of Self','The Bands of Mourning','The Lost Metal','Elantris','Warbreaker','Arcanum Unbounded','White Sand','Tress of the Emerald Sea','Yumi and the Nightmare Painter','The Sunlit Man','Dawnshard','Edgedancer'];
+            for (const book of bookNames) {
+                if (sent.includes(book) && !k.books.includes(book)) k.books.push(book);
             }
         }
         
         return k;
+    },
+    
+    extractFromInfobox(k, infobox) {
+        if (!infobox) return;
+        
+        for (const [key, value] of Object.entries(infobox)) {
+            // Birth
+            if (key.includes('born') || key.includes('birth') || key === 'date') {
+                if (Array.isArray(value)) k.dates.birth = value.join(', ');
+                else k.dates.birth = value;
+            }
+            // Death
+            if (key.includes('died') || key.includes('death')) {
+                if (Array.isArray(value)) k.dates.death = value.join(', ');
+                else k.dates.death = value;
+            }
+            // Abilities
+            if (key.includes('abilities') || key.includes('powers') || key.includes('skills') || key.includes('magic')) {
+                if (Array.isArray(value)) k.abilities.push(...value.filter(v => v.length > 1));
+                else if (value.length > 1) k.abilities.push(value);
+            }
+            // World/Origin
+            if (key.includes('world') || key.includes('planet') || key.includes('universe') || key.includes('origin')) {
+                if (Array.isArray(value)) k.places.push(...value.filter(v => v.length > 1));
+                else if (value.length > 1) k.places.push(value);
+            }
+            // Family
+            if (key.includes('family') || key.includes('parents') || key.includes('spouse') || key.includes('children') || key.includes('relatives')) {
+                if (Array.isArray(value)) k.relationships.push(...value.filter(v => v.length > 1));
+                else if (value.length > 1) k.relationships.push(value);
+            }
+            // Titles
+            if (key.includes('titles') || key.includes('occupation') || key.includes('profession') || key.includes('role')) {
+                if (Array.isArray(value)) {
+                    for (const v of value) {
+                        if (v.length > 1 && v !== ' ') k.titles.push(v);
+                    }
+                }
+                else if (value.length > 1 && value !== ' ') k.titles.push(value);
+            }
+            // Physical
+            if (key.includes('hair') || key.includes('eyes') || key.includes('height') || key.includes('appearance') || key.includes('skin')) {
+                if (Array.isArray(value)) k.physical.push(...value.filter(v => v.length > 1));
+                else if (value.length > 1) k.physical.push(value);
+            }
+            // Books
+            if (key.includes('book') || key.includes('appearance') || key.includes('introduced') || key.includes('series')) {
+                if (Array.isArray(value)) k.books.push(...value.filter(v => v.length > 1));
+                else if (value.length > 1) k.books.push(value);
+            }
+            // Age
+            if (key.includes('age')) {
+                if (Array.isArray(value)) k.dates.age = value.join(', ');
+                else k.dates.age = value;
+            }
+            // Groups/Affiliations
+            if (key.includes('group') || key.includes('affiliation') || key.includes('allegiance') || key.includes('crew') || key.includes('house')) {
+                if (Array.isArray(value)) {
+                    for (const v of value) {
+                        if (v.length > 1 && v !== ' ' && !v.match(/^\W*$/)) k.affiliations.push(v);
+                    }
+                }
+                else if (value.length > 1 && value !== ' ' && !value.match(/^\W*$/)) k.affiliations.push(value);
+            }
+        }
     },
     
     detectEntityType(article) {
@@ -630,7 +706,6 @@ const Scholar = {
         const main = articles[0];
         const title = main.title;
         
-        // Route to handler
         const handlers = {
             birth: () => this.answerBirth(title, knowledge, articles),
             death: () => this.answerDeath(title, knowledge, articles),
@@ -653,7 +728,7 @@ const Scholar = {
         let response = (handlers[intent] || handlers.overview)();
         let confidence = 'high';
         
-        // If handler returned "not found", try fallback
+        // Fallback if specific handler failed
         if (typeof response === 'string' && (response.includes('could not find') || response.includes('not specified'))) {
             if (intent !== 'overview') {
                 const fallback = this.answerOverview(title, knowledge, articles);
@@ -664,7 +739,7 @@ const Scholar = {
             }
         }
         
-        // Add cross-references
+        // Cross-reference
         if (articles.length > 1 && confidence === 'high') {
             const extra = this.crossReference(articles.slice(1), intent, title);
             if (extra) response += extra;
@@ -682,24 +757,24 @@ const Scholar = {
     
     // ==================== ANSWER GENERATORS ====================
     answerBirth(title, k, articles) {
-        // Check infobox first
-        if (k.dates.birth) {
-            return `<p><strong>${title}</strong> was born on <strong>${k.dates.birth}</strong>.</p>`;
+        // Infobox first
+        if (k.dates.birth && k.dates.birth.length > 2 && !k.dates.birth.match(/^\W*$/)) {
+            return `<p><strong>${title}</strong> was born in <strong>${k.dates.birth}</strong>.</p>`;
         }
         
-        // Check text
+        // Text search
         for (const sent of k.rawSentences) {
             const match = sent.match(/born\s+(?:in|on)?\s*(\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Za-z]+\s+\d{4})/i);
-            if (match) {
-                return `<p><strong>${title}</strong> was born in <strong>${match[1]}</strong>.</p><p>${sent}</p>`;
+            if (match && match[1]) {
+                return `<p><strong>${title}</strong> was born in <strong>${match[1]}</strong>.</p>`;
             }
         }
         
-        // Check other articles
+        // Other articles
         for (const art of articles.slice(1)) {
             const text = cleanText(art.extract || art.wikitext || '');
             const match = text.match(/born\s+(?:in|on)?\s*(\d{4})/i);
-            if (match) {
+            if (match && match[1]) {
                 return `<p>According to the article on <strong>${art.title}</strong>, <strong>${title}</strong> was born in <strong>${match[1]}</strong>.</p>`;
             }
         }
@@ -708,18 +783,17 @@ const Scholar = {
     },
     
     answerDeath(title, k, articles) {
-        if (k.dates.death) {
-            return `<p><strong>${title}</strong> died on <strong>${k.dates.death}</strong>.</p>`;
+        if (k.dates.death && k.dates.death.length > 2 && !k.dates.death.match(/^\W*$/)) {
+            return `<p><strong>${title}</strong> died in <strong>${k.dates.death}</strong>.</p>`;
         }
         
         for (const sent of k.rawSentences) {
             const match = sent.match(/(?:died|death|killed|slain|assassinated)\s+(?:in|on)?\s*(\d{4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})/i);
-            if (match) {
-                return `<p><strong>${title}</strong> died in <strong>${match[1]}</strong>.</p><p>${sent}</p>`;
+            if (match && match[1]) {
+                return `<p><strong>${title}</strong> died in <strong>${match[1]}</strong>.</p>`;
             }
         }
         
-        // Check if alive
         const alive = k.rawSentences.some(s => /\b(still alive|currently|survived|has not died)\b/i.test(s));
         if (alive) {
             return `<p><strong>${title}</strong> is still alive according to the archives.</p>`;
@@ -729,7 +803,7 @@ const Scholar = {
     },
     
     answerAge(title, k, articles) {
-        if (k.dates.age) {
+        if (k.dates.age && k.dates.age.length > 0 && !k.dates.age.match(/^\W*$/)) {
             return `<p><strong>${title}</strong> is <strong>${k.dates.age}</strong> old.</p>`;
         }
         
@@ -753,12 +827,11 @@ const Scholar = {
     answerAppearance(title, k, articles) {
         const traits = [...k.physical];
         
-        // Add sentences with physical descriptors
         for (const sent of k.rawSentences.slice(0, 10)) {
             const lower = sent.toLowerCase();
             if ((lower.includes('hair') || lower.includes('eyes') || lower.includes('skin') || 
                  lower.includes('tall') || lower.includes('build') || lower.includes('dressed') || 
-                 lower.includes('wearing') || lower.includes('appearance')) &&
+                 lower.includes('wearing') || lower.includes('appearance') || lower.includes('look')) &&
                 sent.length > 20 && sent.length < 200 && !traits.includes(sent)) {
                 traits.push(sent);
             }
@@ -767,7 +840,9 @@ const Scholar = {
         if (traits.length > 0) {
             let response = `<p><strong>${title}</strong> is described as follows:</p><ul>`;
             for (const t of traits.slice(0, 5)) {
-                response += `<li>${t}.</li>`;
+                // Clean up any remaining artifacts
+                const clean = t.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 10) response += `<li>${clean}.</li>`;
             }
             response += `</ul>`;
             return response;
@@ -777,9 +852,16 @@ const Scholar = {
     },
     
     answerFamily(title, k, articles) {
-        const relations = [...k.relationships];
+        const relations = [];
         
-        // Parse specific relationships from sentences
+        // From infobox relationships
+        for (const rel of k.relationships) {
+            if (typeof rel === 'string' && rel.length > 2 && !rel.match(/^\W*$/)) {
+                relations.push(rel);
+            }
+        }
+        
+        // Parse from sentences
         const patterns = [
             { type: 'Father', regex: /(?:father|dad)\s+(?:is|was|named)?\s*[:]?s*([^.,;]{3,40})/i },
             { type: 'Mother', regex: /(?:mother|mom)\s+(?:is|was|named)?\s*[:]?s*([^.,;]{3,40})/i },
@@ -801,7 +883,8 @@ const Scholar = {
         if (relations.length > 0) {
             let response = `<p><strong>${title}'s</strong> family connections:</p><ul>`;
             for (const r of relations.slice(0, 6)) {
-                response += `<li>${r}</li>`;
+                const clean = r.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 5) response += `<li>${clean}</li>`;
             }
             response += `</ul>`;
             return response;
@@ -849,13 +932,15 @@ const Scholar = {
             response += `</ul>`;
             
             if (k.abilities.length > 0) {
-                response += `<p>${k.abilities[0]}</p>`;
+                const clean = k.abilities[0].replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 10) response += `<p>${clean}</p>`;
             }
             return response;
         }
         
         if (k.abilities.length > 0) {
-            return `<p><strong>${title}</strong> ${k.abilities[0]}</p>`;
+            const clean = k.abilities[0].replace(/titles?=|groups?=|introduced=/gi, '').trim();
+            if (clean.length > 10) return `<p><strong>${title}</strong> ${clean}</p>`;
         }
         
         return `<p>I could not find specific abilities listed for <strong>${title}</strong>.</p>`;
@@ -863,6 +948,15 @@ const Scholar = {
     
     answerRole(title, k, articles) {
         const roles = [];
+        
+        // From infobox titles
+        for (const t of k.titles) {
+            if (typeof t === 'string' && t.length > 2 && !t.match(/^\W*$/)) {
+                const clean = t.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 2 && clean.length < 100) roles.push(clean);
+            }
+        }
+        
         const rolePatterns = [
             { name: 'Knight Radiant', keywords: ['knight radiant','radiant','windrunner','lightweaver','bondsmith'] },
             { name: 'Soldier', keywords: ['soldier','spearman','swordsman','warrior','bridgeman','army','military'] },
@@ -888,16 +982,9 @@ const Scholar = {
             }
         }
         
-        for (const sent of k.titles) {
-            const match = sent.match(/(?:is|was|serves? as|works? as|acts? as|holds? the position of)\s+(?:a|an|the)?\s+([^.,;]{5,60})/i);
-            if (match && match[1]) {
-                const role = match[1].trim();
-                if (!roles.includes(role)) roles.push(role);
-            }
-        }
-        
-        if (roles.length > 0) {
-            return `<p><strong>${title}</strong> is ${roles.slice(0, 4).join(', ')}.</p>`;
+        const uniqueRoles = [...new Set(roles)].slice(0, 5);
+        if (uniqueRoles.length > 0) {
+            return `<p><strong>${title}</strong> is ${uniqueRoles.join(', ')}.</p>`;
         }
         
         return `<p>I could not determine the specific role of <strong>${title}</strong>.</p>`;
@@ -928,7 +1015,8 @@ const Scholar = {
         }
         
         if (k.places.length > 0) {
-            return `<p><strong>${title}</strong> is from <strong>${k.places[0]}</strong>.</p>`;
+            const clean = k.places[0].replace(/titles?=|groups?=|introduced=/gi, '').trim();
+            if (clean.length > 1) return `<p><strong>${title}</strong> is from <strong>${clean}</strong>.</p>`;
         }
         
         return `<p>I could not determine the origin of <strong>${title}</strong>.</p>`;
@@ -955,7 +1043,10 @@ const Scholar = {
         }
         
         if (books.length > 0) {
-            return `<p><strong>${title}</strong> appears in:</p><ul>${books.slice(0, 10).map(b => `<li>${b}</li>`).join('')}</ul>`;
+            const cleanBooks = books.filter(b => b.length > 2 && !b.match(/^\W*$/)).slice(0, 10);
+            if (cleanBooks.length > 0) {
+                return `<p><strong>${title}</strong> appears in:</p><ul>${cleanBooks.map(b => `<li>${b}</li>`).join('')}</ul>`;
+            }
         }
         
         return `<p>I could not find specific book appearances for <strong>${title}</strong>.</p>`;
@@ -973,7 +1064,8 @@ const Scholar = {
                  lower.includes('kind') || lower.includes('cruel') || lower.includes('proud') ||
                  lower.includes('humble') || lower.includes('arrogant') || lower.includes('fear')) &&
                 sent.length > 30 && sent.length < 250) {
-                traits.push(sent);
+                const clean = sent.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 10) traits.push(clean);
             }
         }
         
@@ -990,7 +1082,7 @@ const Scholar = {
     },
     
     answerEvents(title, k, articles) {
-        const events = k.events.slice(0, 6);
+        const events = k.events.slice(0, 6).map(e => e.replace(/titles?=|groups?=|introduced=/gi, '').trim()).filter(e => e.length > 10);
         
         if (events.length > 0) {
             let response = `<p>Key events involving <strong>${title}</strong>:</p><ul>`;
@@ -1005,7 +1097,10 @@ const Scholar = {
     },
     
     answerConcept(title, k, articles) {
-        const sentences = k.rawSentences.filter(s => s.length > 50 && s.length < 300).slice(0, 4);
+        const sentences = k.rawSentences.filter(s => {
+            const clean = s.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+            return clean.length > 50 && clean.length < 300;
+        }).slice(0, 4);
         
         if (sentences.length === 0) {
             return `<p>I found records of <strong>${title}</strong>, but the excerpts do not contain a clear explanation.</p>`;
@@ -1045,7 +1140,7 @@ const Scholar = {
     answerList(title, k, articles) {
         const items = k.rawSentences.filter(s => 
             /^\d+\.|^[-•]|[A-Z][a-z]+:/.test(s) && s.length > 20 && s.length < 150
-        );
+        ).map(s => s.replace(/titles?=|groups?=|introduced=/gi, '').trim()).filter(s => s.length > 10);
         
         if (items.length > 2) {
             let response = `<p>Items related to <strong>${title}</strong>:</p><ul>`;
@@ -1056,7 +1151,11 @@ const Scholar = {
             return response;
         }
         
-        const keySentences = k.rawSentences.filter(s => s.length > 40 && s.length < 200).slice(0, 6);
+        const keySentences = k.rawSentences.filter(s => {
+            const clean = s.replace(/titles?=|groups?=|introduced=/gi, '').trim();
+            return clean.length > 40 && clean.length < 200;
+        }).slice(0, 6);
+        
         if (keySentences.length > 0) {
             let response = `<p>Information about <strong>${title}</strong>:</p><ul>`;
             for (const s of keySentences) {
@@ -1088,16 +1187,17 @@ const Scholar = {
         }
         
         if (supportScore > negateScore && supportScore > 0) {
-            return `<p>Yes — according to the archives, <strong>${title}</strong> ${claim}.</p><p>${k.rawSentences[0] || ''}</p>`;
+            return `<p>Yes — according to the archives, <strong>${title}</strong> ${claim}.</p>`;
         } else if (negateScore > supportScore) {
-            return `<p>No — the archives indicate otherwise regarding <strong>${title}</strong>.</p><p>${k.rawSentences[0] || ''}</p>`;
+            return `<p>No — the archives indicate otherwise regarding <strong>${title}</strong>.</p>`;
         } else {
-            return `<p>The archives contain information about <strong>${title}</strong>, but do not clearly confirm or deny this.</p><p>${k.rawSentences[0] || ''}</p>`;
+            return `<p>The archives contain information about <strong>${title}</strong>, but do not clearly confirm or deny this.</p>`;
         }
     },
     
     answerOverview(title, k, articles) {
-        const sentences = k.rawSentences.filter(s => s.length > 40 && s.length < 250).slice(0, 3);
+        const sentences = k.rawSentences.map(s => s.replace(/titles?=|groups?=|introduced=/gi, '').trim())
+            .filter(s => s.length > 40 && s.length < 250).slice(0, 3);
         
         if (sentences.length === 0) {
             return `<p>I found an article for <strong>${title}</strong>, but the available excerpt is too brief to summarize.</p>`;
@@ -1108,10 +1208,12 @@ const Scholar = {
             response += `<p>${sentences[i]}.</p>`;
         }
         
-        // Quick facts
         const facts = [];
-        if (k.dates.birth) facts.push(`Born: ${k.dates.birth}`);
-        if (k.places.length > 0) facts.push(`From: ${k.places[0]}`);
+        if (k.dates.birth && k.dates.birth.length > 2 && !k.dates.birth.match(/^\W*$/)) facts.push(`Born: ${k.dates.birth}`);
+        if (k.places.length > 0) {
+            const clean = k.places[0].replace(/titles?=|groups?=|introduced=/gi, '').trim();
+            if (clean.length > 1) facts.push(`From: ${clean}`);
+        }
         if (k.abilities.length > 0) facts.push(`Abilities: Yes`);
         
         if (facts.length > 0) {
@@ -1127,21 +1229,22 @@ const Scholar = {
             const text = cleanText(art.extract || art.wikitext || '');
             const sentences = splitSentences(text).filter(s => s.length > 50 && s.length < 200);
             if (sentences.length > 0 && !sentences[0].includes(mainTitle)) {
-                snippets.push({ text: sentences[0], source: art.title });
+                const clean = sentences[0].replace(/titles?=|groups?=|introduced=/gi, '').trim();
+                if (clean.length > 20) snippets.push({ text: clean, source: art.title });
             }
         }
         if (snippets.length === 0) return '';
         return `<p style="margin-top:12px; color: var(--text-muted); font-size: 0.9rem;">The article on <strong>${snippets[0].source}</strong> also notes: ${snippets[0].text}</p>`;
     },
     
-    inferPresentYear(knowledge) {
-        const text = knowledge.rawSentences.join(' ').toLowerCase();
+    inferPresentYear(k) {
+        const text = k.rawSentences.join(' ').toLowerCase();
         if (text.includes('scadrial') || text.includes('mistborn') || text.includes('elendel')) return 348;
         if (text.includes('nalthis') || text.includes('warbreaker') || text.includes('hallandren')) return 328;
         if (text.includes('sel') || text.includes('elantris') || text.includes('fjorden')) return 928;
         if (text.includes('taldain') || text.includes('dayside')) return 0;
         if (text.includes('threnody')) return 0;
-        return 1175; // Roshar default
+        return 1175;
     },
     
     noResults(query) {
@@ -1156,12 +1259,18 @@ const Scholar = {
 function cleanText(text) {
     if (!text) return '';
     return text
-        .replace(/\{\{.*?\}\}/g, '')
-        .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (m, p1, p2) => p2 || p1)
+        .replace(/\{\{.*?\}\}/gs, '')
+        .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
+        .replace(/\[\[([^\]]+)\]\]/g, '$1')
         .replace(/'''?(.*?)'''?/g, '$1')
+        .replace(/''(.*?)''/g, '$1')
         .replace(/==+.*?==+/g, '')
+        .replace(/<ref[^>]*>.*?<\/ref>/gi, '')
+        .replace(/<ref[^>]*\/>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
         .replace(/&nbsp;/g, ' ')
         .replace(/\s+/g, ' ')
+        .replace(/titles?=|groups?=|introduced=/gi, '')
         .trim();
 }
 
