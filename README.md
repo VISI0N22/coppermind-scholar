@@ -2,7 +2,7 @@
 
 A conversational AI interface for querying **[The Coppermind](https://coppermind.net)** — the official Brandon Sanderson wiki. Ask questions about characters, magic systems, worlds, and events across the Cosmere.
 
-🌐 **[Live Demo](https://VISI0N22.github.io/coppermind-scholar)** ← Replace with your GitHub Pages URL
+🌐 **[Live Demo](https://VISI0N22.github.io/coppermind-scholar)** 
 
 ---
 
