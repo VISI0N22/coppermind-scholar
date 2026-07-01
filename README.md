@@ -18,5 +18,7 @@ A conversational AI interface for querying **[The Coppermind](https://coppermind
 
 ## 🙏 Credits
 📚 Data provided by The Coppermind
+
 ✍️ Built by fans, for fans
+
 🚫 Not affiliated with Brandon Sanderson
