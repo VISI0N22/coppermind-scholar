@@ -9,6 +9,7 @@
 </head>
 <body>
     <div class="app">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
@@ -35,25 +36,39 @@
                 <button onclick="askSuggestion('Who is Kaladin?')">Who is Kaladin?</button>
                 <button onclick="askSuggestion('When was Vin born?')">When was Vin born?</button>
                 <button onclick="askSuggestion('What is Allomancy?')">What is Allomancy?</button>
-                <button onclick="askSuggestion('What does Shallan look like?')">What does Shallan look like?</button>
+                <button onclick="askSuggestion('What did Brandon say about Hoid holding a Dawnshard?')">What did Brandon say about Hoid holding a Dawnshard?</button>
                 <button onclick="askSuggestion('Tell me about Roshar')">Tell me about Roshar</button>
                 <button onclick="askSuggestion('What are the Knights Radiant?')">What are the Knights Radiant?</button>
             </div>
 
             <div class="sidebar-footer">
-                <p>Powered by <a href="https://coppermind.net" target="_blank" rel="noopener">The Coppermind</a></p>
+                <p>Archives: <a href="https://coppermind.net" target="_blank" rel="noopener">Coppermind</a> & <a href="https://wob.coppermind.net" target="_blank" rel="noopener">Arcanum</a></p>
             </div>
         </aside>
 
+        <!-- Main Chat Area -->
         <main class="chat-container">
             <div class="chat-header">
-                <h2>Coppermind Scholar</h2>
-                <div class="status">
-                    <span class="status-dot"></span>
-                    Connected to Coppermind
+                <div class="header-title">
+                    <h2>Coppermind Scholar</h2>
+                    <div class="status">
+                        <span class="status-dot"></span>
+                        <span id="statusText">Scholar Mode (Coppermind + Arcanum Grounded)</span>
+                    </div>
+                </div>
+
+                <!-- Mode Switcher -->
+                <div class="mode-switch-container">
+                    <span class="mode-label" id="modeLabelScholar">Scholar Mode</span>
+                    <label class="switch" title="Toggle between Archive Grounded Scholar Mode and General Chatbot Mode">
+                        <input type="checkbox" id="modeToggle" onchange="toggleMode(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="mode-label" id="modeLabelNormal">AI Chatbot</span>
                 </div>
             </div>
 
+            <!-- Messages Stream -->
             <div id="chatMessages" class="chat-messages">
                 <div class="message bot-message">
                     <div class="avatar">
@@ -64,12 +79,13 @@
                         </svg>
                     </div>
                     <div class="message-content">
-                        <p>Greetings, traveler. I am the Coppermind Scholar, a keeper of knowledge from Brandon Sanderson's Cosmere. Ask me about characters, magic systems, worlds, or events — I shall search the archives and reveal what I find.</p>
+                        <p>Greetings, traveler. I am the Coppermind Scholar. In <strong>Scholar Mode</strong>, I search the live Coppermind Wiki and Arcanum (Words of Brandon) archives, synthesizing answers strictly from recorded canon. You can toggle to <strong>AI Chatbot</strong> mode anytime using the switch above.</p>
                         <span class="timestamp">Now</span>
                     </div>
                 </div>
             </div>
 
+            <!-- Typing Indicator -->
             <div id="typingIndicator" class="typing-indicator hidden">
                 <div class="avatar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -83,6 +99,7 @@
                 </div>
             </div>
 
+            <!-- Input Box -->
             <div class="input-area">
                 <div class="input-box">
                     <input 
@@ -98,7 +115,7 @@
                         </svg>
                     </button>
                 </div>
-                <p class="disclaimer">Knowledge is drawn from the Coppermind wiki. I may make mistakes — always verify important details.</p>
+                <p class="disclaimer" id="chatDisclaimer">Grounding mode: Responses are summarized strictly from Coppermind wiki & Arcanum archive entries.</p>
             </div>
         </main>
     </div>
